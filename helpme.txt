@@ -1,0 +1,123 @@
+Installations:
+0. Install npm
+>> npm init
+
+1.Install cypress
+>> npm install --save-dev cypress@10.7.0
+
+2.Run test runner:
+1way:   >> ./node_modules/.bin/cypress open
+2way:   add in package.json, a script:  "cypress:open": "cypress open"
+        >> npm run cypress:open
+
+3.Install xpath
+>> npm install -D cypress-xpath
+add in support > e2e.js:  require('cypress-xpath')
+
+4. Dashboard - login with sofiya0819 github
+>> ./node_modules/.bin/cypress run --record --key 0c3e5449-a23f-4887-b28c-ddc3837e5a3e
+ run 1 suite:
+ ./node_modules/.bin/cypress run --spec cypress/e2e/webdriver-uni/checkboxes.cy.js --record --key 0c3e5449-a23f-4887-b28c-ddc3837e5a3e
+
+ 5. Install npx
+ npm install -g npx
+
+ 6. Install multiple reports
+ npm install --save-dev cypress-multi-reporters mocha-junit-reporter
+ 
+ in cypress.config.js add: 
+ reporter: 'cypress-multi-reporters',    
+ reporterOptions: {
+      configFile: 'reporter-config.json'
+    },
+
+in reporter-config.json (for each suit will be generated a file):
+  "reporterEnabled": "spec, mocha-junit-reporter",
+  "mochaJunitReporterReporterOptions": {
+  "mochaFile": "cypress/results/junit/results-[hash].xml" 
+  }
+When you execute tests, xml files will be stored in results for each suit/file
+For merge i.e generate one report file, or remove files, see the custom scripts in package.json
+
+7. Install mochawsome reports(merge & generator); in html, more visual
+>> npm install --save-dev mochawesome mochawesome-merge mochawesome-report-generator
+
+Use the reference: https://docs.cypress.io/guides/tooling/reporters#Multiple-reporters
+For merge in html file and deliting files see the package.json
+
+in reporter-config.json:
+    "reporterEnabled": "spec, cypress-multi-reporters",
+    "mochaJunitReporterReporterOptions": {
+    "mochaFile": "cypress/results/junit/results-[hash].xml" 
+    },
+    "reporterOptions": {
+      "reporterEnabled": "mochawesome",
+      "mochawesomeReporterOptions": {
+        "reportDir": "cypress/results/mochawesome",
+        "quite": true,
+        "overwrite": false,
+        "html": false,
+        "json": true
+      }
+    }
+
+In the custom scrip you can execute another script, see "cypress-regression-pack"
+
+8. Multiple configuration files - used for different env - test, accept,life
+add staging.config file - there add additional env.var to the dafault vars in cypress.config
+and the baseurl will be overwriten with the corresponding
+Therefore, tests using baseurl for webdriver-uni - cy.visit("/"), will fail 
+See the settings in test runner:
+>> npx cypress open --env configFile=staging
+
+Reference: https://docs.cypress.io/api/plugins/configuration-api#Switch-between-multiple-configuration-files
+
+add in cypress.config.js:
+const fs = require('fs-extra');
+const path = require('path');
+**
+function getConfigurationByFile(file) {
+  const pathToConfigFile = path.resolve('cypress\\config', `${file}.json`);
+  if(!fs.existsSync(pathToConfigFile)) {
+    console.log("No custom config file found.");
+    return {};
+  }
+  return fs.readJson(pathToConfigFile);
+}
+**
+    setupNodeEvents(on, config) {
+      // implement node event listeners here
+      const file = config.env.configFile || ''
+      return getConfigurationByFile(file)
+    }
+
+
+*************************************************************------------------------------------------------------------------
+node_modules/.bin/cypress open
+ctl+c ->end the test runner
+
+this is headless mode (not seeing browser window):
+>> node_modules/.bin/cypress run 
+>> npx cypress run --browser chrome
+
+this is headed mode (seeing the tests in browser)
+>> node_modules/.bin/cypress open
+>> npx cypress run --browser chrome --headed
+
+go to videos folder:
+>> node_modules/.bin/cypress run --headed
+choose a browser:
+>> node_modules/.bin/cypress run --browser chrome
+
+trigger individual tests: execute all files in this folder
+>> node_modules/.bin/cypress run --spec cypress/e2e/webdriver-uni/*
+
+enable schreenshots when tests fail (can be seen in your dashboard):
+in cypress.config.js:
+    screenshotOnRunFailure: true,  
+    trashAssetsBeforeRuns: true,
+
+to see screenshots and videos, execute run command instead of open
+>> ./node_modules/.bin/cypress run --spec cypress/e2e/webdriver-uni/contact-us.cy.js
+>> npx cypress run --spec cypress/e2e/webdriver-uni/contact-us.cy.js
+
